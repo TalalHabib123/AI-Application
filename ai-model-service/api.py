@@ -5,11 +5,13 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.densenet import preprocess_input
 import numpy as np
 import tensorflow as tf
+import cv2
 from PIL import Image
 
 app = Flask(__name__)
 
 diseases = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
+
 
 
 if tf.test.is_gpu_available():
@@ -41,13 +43,15 @@ def predict():
     file = request.files['file']
     img = Image.open(file)
     img = img.resize((256, 256))
-    img = img.convert('RGB')
-    x = img_to_array(img)
-    x = np.expand_dims(x, axis=0)
+    img = np.array(img)
+    if len(img.shape) == 2 or img.shape[2] == 1:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB) 
+    img = np.expand_dims(img, axis=0)
+    img = preprocess_input(img)
 
     stimulate_predictions =[]
     for _ in range(10):
-        predictions = model.predict(x, verbose=0)
+        predictions = model.predict(img, verbose=0)
         stimulate_predictions.append(predictions)
     predictions = np.mean(np.array(stimulate_predictions), axis=0)
     labels = np.argmax(predictions, axis=1)
