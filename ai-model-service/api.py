@@ -14,7 +14,7 @@ diseases = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
 
 
 
-if tf.test.is_gpu_available():
+if len(tf.config.list_physical_devices('GPU')) > 0:
     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
 else:
     strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
