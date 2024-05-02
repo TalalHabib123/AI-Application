@@ -61,4 +61,4 @@ def predict():
     return jsonify({'class': pred_class, 'label': int(labels[0]), 'predictions': predictions.tolist()})
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5000, mode='development')
