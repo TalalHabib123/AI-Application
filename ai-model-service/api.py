@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 diseases = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
 
-
+threshold = 0.25
 
 if len(tf.config.list_physical_devices('GPU')) > 0:
     strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
@@ -55,9 +55,13 @@ def predict():
         stimulate_predictions.append(predictions)
     predictions = np.mean(np.array(stimulate_predictions), axis=0)
     labels = np.argmax(predictions, axis=1)
+    
+    max_prob = np.max(predictions)
+    if max_prob < threshold:
+        return jsonify({'class': 'Unknown', 'label': -1, 'predictions': predictions.tolist()})
+    
     pred_class = int(labels[0])
     pred_class = diseases[pred_class]
-    # Return the prediction
     return jsonify({'class': pred_class, 'label': int(labels[0]), 'predictions': predictions.tolist()})
 
 if __name__ == '__main__':
