@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+
 from keras.models import load_model
 from keras.utils import load_img, img_to_array
-from keras.preprocessing.image import ImageDataGenerator
+# from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.densenet import preprocess_input
 import numpy as np
 import tensorflow as tf
@@ -9,23 +11,29 @@ import cv2
 from PIL import Image
 
 app = Flask(__name__)
-
+CORS(app)
 diseases = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
 
 threshold = 0.25
 
-if len(tf.config.list_physical_devices('GPU')) > 0:
-    strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
-else:
-    strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
+model = None
+def Load_Model():
+    global model
+    if len(tf.config.list_physical_devices('GPU')) > 0:
+        strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+        print("Running on GPU")
+    else:
+        strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
+        print("Running on CPU")
 
-with strategy.scope():
-    try:
-        model = load_model('model.h5')
-        print("Model loaded")
-    except Exception as e:
-        print(f"Error loading model: {e}")
+    with strategy.scope():
+        try:
+            model = load_model('model.h5')
+            print("Model loaded")
+        except Exception as e:
+            print(f"Error loading model: {e}")
 
+Load_Model()
 
 @app.route('/', methods=['GET'])
 def ServerStatus():
@@ -41,7 +49,7 @@ def predict():
         return 'No selected file', 400
     
     file = request.files['file']
-    img = Image.open(file)
+    img = Image.open(file).convert('RGB')
     img = img.resize((256, 256))
     img = np.array(img)
     if len(img.shape) == 2 or img.shape[2] == 1:
@@ -65,4 +73,4 @@ def predict():
     return jsonify({'class': pred_class, 'label': int(labels[0]), 'predictions': predictions.tolist()})
 
 if __name__ == '__main__':
-    app.run(port=5000, mode='development')
+    app.run(port=5000 , debug=True)
