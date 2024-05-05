@@ -18,12 +18,14 @@ import seaborn as sns
 import cv2
 from keras.callbacks import EarlyStopping
 
-RETRAIN = True
+RETRAIN = False
 
 if tf.test.gpu_device_name():
     print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+    device = '/GPU:0'
 else:
-    print("Please install GPU version of TF")
+    print("No GPU found, using CPU instead.")
+    device = '/CPU:0'
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -33,7 +35,7 @@ if gpus:
     except RuntimeError as e:
         print(e)
 
-with tf.device('/GPU:0'):
+with tf.device(device):
 
     def preprocess_image(img):
         if len(img.shape) == 2 or img.shape[2] == 1:
