@@ -79,6 +79,9 @@ with tf.device(device):
     train_df = pd.DataFrame({'filename': X_train, 'class': [str(i) for i in y_train]})
     test_df = pd.DataFrame({'filename': X_test, 'class': [str(i) for i in y_test]})
 
+    train_df = train_df.sample(frac=1).reset_index(drop=True)
+    test_df = test_df.sample(frac=1).reset_index(drop=True)
+
     image_size = (256, 256)
 
     train_generator = train_datagen.flow_from_dataframe(train_df, x_col='filename', y_col='class', target_size=image_size, class_mode='categorical', batch_size=16)
